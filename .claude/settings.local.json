@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(open:*)",
+      "Bash(git -C /Users/josh/Code/sixfeetup/blobtube status)",
+      "Bash(git -C /Users/josh/Code/sixfeetup/blobtube diff)",
+      "Bash(git -C /Users/josh/Code/sixfeetup/blobtube log --oneline -5)",
+      "Bash(git -C /Users/josh/Code/sixfeetup/blobtube add gen_campfire.py gen_snow.py gen_space.py gen_underwater.py)",
+      "Bash(git -C:*)"
+    ]
+  }
+}
