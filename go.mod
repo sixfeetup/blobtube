@@ -4,6 +4,7 @@ go 1.22
 
 require (
 	github.com/go-chi/chi/v5 v5.2.5
+	github.com/grafov/m3u8 v0.12.1
 	github.com/rs/zerolog v1.34.0
 )
 
