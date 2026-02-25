@@ -1,0 +1,30 @@
+version: 2
+
+run:
+  timeout: 5m
+  tests: true
+
+linters:
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - revive
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+
+linters-settings:
+  revive:
+    rules:
+      - name: early-return
+      - name: errorf
+      - name: if-return
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0

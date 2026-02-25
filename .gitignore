@@ -1,1 +1,26 @@
 .direnv
+
+# Go
+bin/
+*.exe
+*.exe~
+*.dll
+*.dylib
+*.so
+*.test
+*.out
+coverage*
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+
+# Env / secrets
+.env
+.env.*
+certs/*.key
+certs/*.crt
+
+# Misc
+tmp/
