@@ -8,8 +8,6 @@
 
 Built for constrained networks, hobby servers, edge deployments, and people who still remember buffering circles as a personality trait.
 
----
-
 ## 🚀 What Is BlobTube?
 
 BlobTube is a lightweight, efficient video streaming platform designed to:
@@ -22,8 +20,6 @@ BlobTube is a lightweight, efficient video streaming platform designed to:
 
 If traditional streaming platforms are luxury cruise ships, BlobTube is a stubborn little tugboat that always reaches the harbor.
 
----
-
 ## 🧠 Philosophy
 
 - Keep it simple.
@@ -31,8 +27,6 @@ If traditional streaming platforms are luxury cruise ships, BlobTube is a stubbo
 - Avoid unnecessary abstractions.
 - No enterprise buzzword soup.
 - If it compiles and streams, ship it.
-
----
 
 ## 🏗 Why Go?
 
@@ -43,8 +37,6 @@ Because:
 - Cross-compilation is painless.
 - You enjoy feeling morally superior about memory usage.
 
----
-
 ## 🧪 Status
 
 BlobTube is under active development.  
@@ -53,8 +45,6 @@ Which means:
 - Things may break.
 - APIs may change.
 - You will probably refactor something at 2am.
-
----
 
 ## 📡 The Vision
 
