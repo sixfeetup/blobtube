@@ -46,6 +46,25 @@ Which means:
 - APIs may change.
 - You will probably refactor something at 2am.
 
+## Development
+
+This repo uses a Nix dev shell to provide toolchain dependencies.
+
+```sh
+# Enter the dev environment (provides go + golangci-lint)
+nix develop
+```
+
+Common commands:
+
+```sh
+make build
+make test
+make lint
+```
+
+The build output is `bin/blobtube`.
+
 ## 📡 The Vision
 
 A streaming service that:

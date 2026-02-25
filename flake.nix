@@ -17,10 +17,12 @@
           buildInputs = with pkgs; [
             gh
             ffmpeg
+            go
+            golangci-lint
             marp-cli
           ];
           shellHook = ''
-            echo "Development environment loaded with GitHub CLI, FFmpeg, and Marp CLI"
+            echo "Development environment loaded with Go, golangci-lint, GitHub CLI, FFmpeg, and Marp CLI"
           '';
         };
       }
