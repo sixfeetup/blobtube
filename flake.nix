@@ -17,9 +17,10 @@
           buildInputs = with pkgs; [
             gh
             ffmpeg
+            marp-cli
           ];
           shellHook = ''
-            echo "Development environment loaded with GitHub CLI and FFmpeg"
+            echo "Development environment loaded with GitHub CLI, FFmpeg, and Marp CLI"
           '';
         };
       }
