@@ -1,6 +1,6 @@
 # User Stories
 
-**Project**: TicketShit (Low-Bandwidth YouTube Streaming)
+**Project**: BlobTube (Low-Bandwidth YouTube Streaming)
 **Last Updated**: 2026-02-25
 
 This document tracks all user stories for the project, organized by epic.

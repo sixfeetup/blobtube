@@ -1,4 +1,4 @@
-# TicketShit
+# BlobTube
 
 **Low-Bandwidth YouTube Video Streaming Proxy**
 
@@ -30,8 +30,8 @@ A Go-based video transcoding service that streams YouTube videos at ultra-low re
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/TicketShit.git
-cd TicketShit
+git clone https://github.com/sixfeetup/blobtube.git
+cd BlobTube
 
 # Start the service
 docker-compose up
@@ -202,7 +202,7 @@ LOG_LEVEL=info
 ## Project Structure
 
 ```
-TicketShit/
+BlobTube/
 ├── cmd/server/          # Main application entry point
 ├── internal/            # Private application code
 │   ├── api/             # HTTP handlers and routes

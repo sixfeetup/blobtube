@@ -1,6 +1,6 @@
 # Development Tickets
 
-**Project**: TicketShit (Low-Bandwidth YouTube Streaming)
+**Project**: BlobTube (Low-Bandwidth YouTube Streaming)
 **Last Updated**: 2026-02-25
 
 This document tracks all development tickets organized by phase and milestone.
@@ -31,7 +31,7 @@ This document tracks all development tickets organized by phase and milestone.
 Initialize Go module, create directory structure, setup build tooling.
 
 ### Tasks
-- [ ] Run `go mod init github.com/yourusername/TicketShit`
+- [ ] Run `go mod init github.com/sixfeetup/blobtube`
 - [ ] Create directory structure (cmd/, internal/, docs/, web/, test/)
 - [ ] Setup Makefile with targets: build, test, lint, docker-build, docker-up
 - [ ] Add .gitignore for Go + Docker

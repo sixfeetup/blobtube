@@ -1,6 +1,6 @@
 # Architecture Decision Records (ADRs)
 
-This directory contains Architecture Decision Records for the TicketShit project (low-bandwidth YouTube streaming).
+This directory contains Architecture Decision Records for the BlobTube project (low-bandwidth YouTube streaming).
 
 ## Format
 

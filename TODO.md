@@ -1,6 +1,6 @@
 # TODO - Current Session
 
-**Project**: TicketShit (Low-Bandwidth YouTube Streaming)
+**Project**: BlobTube (Low-Bandwidth YouTube Streaming)
 **Session Date**: 2026-02-25
 **Status**: Planning & Scaffolding
 
@@ -75,7 +75,7 @@ None currently
 
 ## Questions for Team
 
-1. Should we rename from "TicketShit" to something more professional?
+1. ~~Should we rename from "TicketShit" to something more professional?~~ **RESOLVED: Renamed to BlobTube**
 2. Any additional ADRs needed before starting implementation?
 3. Should we set up GitHub project board now or after scaffolding?
 

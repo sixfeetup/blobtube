@@ -1,6 +1,6 @@
 # Low-Bandwidth YouTube Video Streaming Project Plan
 
-**Project Name**: TicketShit (working name - to be renamed)
+**Project Name**: BlobTube
 **Status**: Planning Phase
 **Last Updated**: 2026-02-25
 
@@ -545,7 +545,7 @@ Build a Go-based video transcoding proxy that streams YouTube videos at ultra-lo
 ## Project Structure
 
 ```
-TicketShit/
+BlobTube/
 ├── Makefile                 # Build automation
 ├── docker-compose.yml       # Local development environment
 ├── Dockerfile               # Multi-stage build
@@ -627,7 +627,7 @@ TicketShit/
 ```bash
 # Clone and setup
 git clone <repo>
-cd TicketShit
+cd BlobTube
 make setup          # Install dependencies
 make docker-build   # Build Docker image
 ```
@@ -744,7 +744,7 @@ Upon exiting plan mode, the following project structure will be created:
 
 ### Directory Structure to Create:
 ```
-TicketShit/
+BlobTube/
 ├── docs/
 │   ├── adr/              # Architecture Decision Records
 │   │   ├── README.md

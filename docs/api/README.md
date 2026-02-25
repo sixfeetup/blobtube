@@ -2,7 +2,7 @@
 
 **Status**: Placeholder - OpenAPI specification coming soon
 
-This directory will contain the OpenAPI/Swagger specification for the TicketShit API.
+This directory will contain the OpenAPI/Swagger specification for the BlobTube API.
 
 ## Planned Endpoints
 
