@@ -11,19 +11,11 @@ linters:
     - ineffassign
     - staticcheck
     - unused
-    - revive
 
 formatters:
   enable:
     - gofmt
     - goimports
-
-linters-settings:
-  revive:
-    rules:
-      - name: early-return
-      - name: errorf
-      - name: if-return
 
 issues:
   max-issues-per-linter: 0

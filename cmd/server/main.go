@@ -2,10 +2,37 @@
 package main
 
 import (
-	"fmt"
+	"context"
+	"errors"
+	"net/http"
 	"os"
+	"syscall"
+	"time"
+
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
+
+	"github.com/sixfeetup/blobtube/internal/config"
+	"github.com/sixfeetup/blobtube/internal/server"
 )
 
 func main() {
-	_, _ = fmt.Fprintln(os.Stdout, "blobtube (work in progress)")
+	cfg := config.FromEnv()
+
+	zerolog.TimeFieldFormat = time.RFC3339Nano
+	level, err := zerolog.ParseLevel(cfg.LogLevel)
+	if err != nil {
+		level = zerolog.InfoLevel
+	}
+	log.Logger = zerolog.New(os.Stdout).Level(level).With().Timestamp().Logger()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	if err := server.Run(ctx, cfg, server.WithSignals(os.Interrupt, syscall.SIGTERM)); err != nil {
+		if errors.Is(err, http.ErrServerClosed) {
+			return
+		}
+		log.Fatal().Err(err).Msg("server exited")
+	}
 }

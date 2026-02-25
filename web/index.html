@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>BlobTube</title>
+    <style>
+      :root { color-scheme: light; }
+      body {
+        margin: 0;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        background: radial-gradient(1200px 600px at 20% 0%, #fff7e8 0%, #ffffff 50%),
+          radial-gradient(1000px 600px at 90% 10%, #eef6ff 0%, #ffffff 55%);
+        color: #121212;
+      }
+      main {
+        max-width: 860px;
+        padding: 56px 20px;
+        margin: 0 auto;
+      }
+      h1 { font-size: 44px; line-height: 1.05; margin: 0 0 8px; }
+      p { font-size: 16px; line-height: 1.6; margin: 0 0 18px; max-width: 72ch; }
+      code { background: rgba(0,0,0,0.05); padding: 2px 6px; border-radius: 6px; }
+      .card {
+        margin-top: 22px;
+        border: 1px solid rgba(0,0,0,0.08);
+        background: rgba(255,255,255,0.8);
+        backdrop-filter: blur(6px);
+        border-radius: 14px;
+        padding: 18px;
+      }
+      .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+      input {
+        flex: 1 1 420px;
+        padding: 12px 12px;
+        border-radius: 10px;
+        border: 1px solid rgba(0,0,0,0.16);
+        font: inherit;
+      }
+      button {
+        padding: 12px 14px;
+        border-radius: 10px;
+        border: 1px solid rgba(0,0,0,0.16);
+        background: #0f172a;
+        color: white;
+        font: inherit;
+        cursor: pointer;
+      }
+      button:disabled { opacity: 0.6; cursor: not-allowed; }
+      .hint { font-size: 14px; opacity: 0.85; margin-top: 10px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>BlobTube</h1>
+      <p>Low-bandwidth YouTube streaming proxy (WIP). Health endpoint: <code>/health</code>.</p>
+      <div class="card">
+        <div class="row">
+          <input id="url" placeholder="Paste a YouTube URL (coming soon)" disabled />
+          <button disabled>Stream</button>
+        </div>
+        <div class="hint">Server is up when <code>/health</code> returns <code>{"status":"ok"}</code>.</div>
+      </div>
+    </main>
+  </body>
+</html>
