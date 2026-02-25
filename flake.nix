@@ -16,9 +16,10 @@
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
             gh
+            ffmpeg
           ];
           shellHook = ''
-            echo "Development environment loaded with GitHub CLI"
+            echo "Development environment loaded with GitHub CLI and FFmpeg"
           '';
         };
       }
