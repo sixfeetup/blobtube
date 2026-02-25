@@ -6,9 +6,17 @@ backgroundColor: #150b4b
 color: #f4e8b2
 ---
 
-# BlobTube
+<!-- _class: lead -->
 
-Welcome to the presentation
+![w:400](assets/blobtube-logo.png)
+
+# Announcing BlobTube
+
+A New Web Application by
+
+**The Dark Factory**
+
+February 25, 2026
 
 ---
 
