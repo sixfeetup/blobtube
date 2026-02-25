@@ -15,7 +15,8 @@ type Config struct {
 	LogLevel string
 	DevMode  bool
 
-	YtDLPPath string
+	YtDLPPath  string
+	StreamsDir string
 }
 
 func FromEnv() Config {
@@ -31,6 +32,7 @@ func FromEnv() Config {
 		LogLevel:    envString("LOG_LEVEL", "info"),
 		DevMode:     envBool("DEV_MODE", false),
 		YtDLPPath:   envString("YTDLP_PATH", "yt-dlp"),
+		StreamsDir:  envString("STREAMS_DIR", "/tmp/blobtube"),
 	}
 }
 

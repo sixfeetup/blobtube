@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -16,6 +17,7 @@ import (
 
 	"github.com/sixfeetup/blobtube/internal/api"
 	"github.com/sixfeetup/blobtube/internal/config"
+	"github.com/sixfeetup/blobtube/internal/stream"
 )
 
 type runOptions struct {
@@ -42,7 +44,18 @@ func Run(ctx context.Context, cfg config.Config, opts ...RunOption) error {
 	ctx, stop := signal.NotifyContext(ctx, o.signals...)
 	defer stop()
 
-	h, err := api.NewHandler(cfg)
+	streams := stream.NewManager(5 * time.Minute)
+	resources := stream.NewResources(log.Logger)
+	go streams.StartJanitor(ctx, 30*time.Second, func(streamID string) {
+		cleanupCtx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+		resources.CleanupStream(cleanupCtx, streamID)
+		if err := os.RemoveAll(filepath.Join(cfg.StreamsDir, streamID)); err != nil {
+			log.Warn().Str("stream_id", streamID).Err(err).Msg("failed to remove stream dir")
+		}
+	})
+
+	h, err := api.NewHandler(cfg, streams)
 	if err != nil {
 		return err
 	}
@@ -80,6 +93,15 @@ func Run(ctx context.Context, cfg config.Config, opts ...RunOption) error {
 
 		_ = httpRedirectSrv.Shutdown(shutdownCtx)
 		_ = httpsSrv.Shutdown(shutdownCtx)
+
+		cleanupCtx, cleanupCancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cleanupCancel()
+		resources.CleanupAll(cleanupCtx)
+		for _, id := range streams.IDs() {
+			if err := os.RemoveAll(filepath.Join(cfg.StreamsDir, id)); err != nil {
+				log.Warn().Str("stream_id", id).Err(err).Msg("failed to remove stream dir")
+			}
+		}
 
 		return nil
 	case err := <-errCh:
