@@ -1,0 +1,45 @@
+services:
+  certgen:
+    image: alpine:3.20
+    command:
+      - /bin/sh
+      - -c
+      - |
+        set -eu
+        apk add --no-cache openssl >/dev/null
+        mkdir -p /certs
+        if [ -f /certs/server.key ] && [ -f /certs/server.crt ]; then
+          echo "certs already exist"
+          exit 0
+        fi
+        echo "generating self-signed certs for localhost"
+        openssl req -x509 -newkey rsa:2048 -sha256 -days 365 -nodes \
+          -keyout /certs/server.key \
+          -out /certs/server.crt \
+          -subj "/CN=localhost" \
+          -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
+        chmod 0644 /certs/server.crt /certs/server.key
+    volumes:
+      - certs:/certs
+
+  blobtube:
+    build: .
+    depends_on:
+      - certgen
+    ports:
+      - "8443:8443"
+      - "8080:8080"
+    environment:
+      PORT: 8443
+      HTTP_PORT: 8080
+      TLS_CERT_FILE: /certs/server.crt
+      TLS_KEY_FILE: /certs/server.key
+      STATIC_DIR: /app/web
+      LOG_LEVEL: info
+      DEV_MODE: "true"
+      YTDLP_PATH: yt-dlp
+    volumes:
+      - certs:/certs:ro
+
+volumes:
+  certs:

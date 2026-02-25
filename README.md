@@ -65,6 +65,16 @@ make lint
 
 The build output is `bin/blobtube`.
 
+## Docker
+
+Run locally with Docker Compose (generates a self-signed cert on first run):
+
+```sh
+docker compose up --build
+```
+
+Then open `https://localhost:8443/health`.
+
 ## 📡 The Vision
 
 A streaming service that:
