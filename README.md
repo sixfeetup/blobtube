@@ -55,6 +55,9 @@ A streaming service that:
 - Doesn’t melt CPUs
 - Doesn’t need 47 microservices and a Kubernetes cluster named after a Greek god
 
+## Errata
+
+
 ---
 
 Stay tuned.  
