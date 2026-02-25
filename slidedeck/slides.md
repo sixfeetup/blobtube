@@ -127,6 +127,23 @@ February 25, 2026
 
 ---
 
+<style scoped>
+ul { font-size: 0.75em; }
+</style>
+
+## Current Progress: Milestone 1 Complete
+
+**Foundation Phase Delivered**
+
+- **TICKET-001**: Project scaffolding - Go module, directory structure, Makefile, linting
+- **TICKET-002**: Docker infrastructure - Multi-stage build, FFmpeg with SVT-AV1, HTTPS support
+- **TICKET-003**: Basic HTTP server - TLS-enabled server, health checks, graceful shutdown
+- **TICKET-004**: yt-dlp integration - YouTube URL extraction, error handling, unit tests
+
+**Ready for Phase 2: Transcoding Engine**
+
+---
+
 ## Questions?
 
 **BlobTube**
