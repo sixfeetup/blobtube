@@ -1,7 +1,8 @@
 # ADR-009: AV1 Video Codec with SVT-AV1
 
-**Status**: Accepted
+**Status**: SUPERSEDED by ADR-009a (H.264)
 **Date**: 2026-02-25
+**Superseded Date**: 2026-02-26
 
 ## Context
 
@@ -43,3 +44,44 @@ Use AV1 codec with SVT-AV1 encoder, prioritizing speed (preset 8).
 - Benchmark on target hardware to determine concurrent stream capacity
 - Consider preset 10 if need even more speed
 - Monitor encoding time metrics to tune preset
+
+---
+
+## Why This Decision Was Superseded (2026-02-26)
+
+During implementation and testing, we discovered that **AV1 codec support in HLS is not production-ready** across browsers:
+
+### Issues Encountered
+
+1. **Browser Decode Errors**:
+   - Chrome: `MEDIA_ERR_DECODE: video append failed for segment #0`
+   - Error: "media used features your browser did not support"
+   - Even with proper fMP4 muxing and movflags
+
+2. **fMP4 Muxing Issues**:
+   - Segments had malformed track fragment headers
+   - Error: "trun track id unknown, no tfhd was found"
+   - FFmpeg fMP4 output not compatible with browser MSE for AV1
+
+3. **Limited Browser Support**:
+   - Chrome: Spotty AV1 HLS support via MSE (2026)
+   - Firefox: Limited/no AV1 HLS support
+   - Safari: No AV1 support at all
+   - Even with codec string `av01.0.00M.08` in master playlist
+
+4. **Compression Not Critical**:
+   - At 50-200 kbps bitrates, H.264 provides adequate compression
+   - Quality difference at these low bitrates is minimal
+   - Reliability > 30% compression gain
+
+### Conclusion
+
+While AV1 is technically superior for compression, **browser HLS implementation is incomplete** in 2026. H.264 Baseline Profile provides:
+- ✅ Universal browser support
+- ✅ Well-tested HLS + fMP4 pipeline
+- ✅ No muxing or decode issues
+- ✅ Still excellent compression at low bitrates
+
+**Recommendation**: Revisit AV1 in 2027-2028 when browser HLS support matures.
+
+See ADR-009a for the new H.264 implementation.
