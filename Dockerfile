@@ -21,8 +21,12 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends \
     ca-certificates \
     ffmpeg \
-    yt-dlp \
-  && rm -rf /var/lib/apt/lists/*
+    python3 \
+    python3-pip \
+    curl \
+  && rm -rf /var/lib/apt/lists/* \
+  && curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp \
+  && chmod a+rx /usr/local/bin/yt-dlp
 
 # Fail the build if SVT-AV1 isn't available.
 RUN ffmpeg -hide_banner -encoders | grep -qE 'libsvtav1|svt_av1'

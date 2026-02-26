@@ -101,3 +101,72 @@ func TranscodeMultiQualityHLS(ctx context.Context, logger zerolog.Logger, ff *FF
 
 	return res, nil
 }
+
+// TranscodeMultiQualityHLSFromYouTube transcodes a YouTube video by piping from yt-dlp to FFmpeg.
+// This avoids the 403 Forbidden errors that occur when passing YouTube stream URLs directly to FFmpeg.
+func TranscodeMultiQualityHLSFromYouTube(ctx context.Context, logger zerolog.Logger, ff *FFmpeg, ytdlp *YtDLP, youtubeURL string, outputDir string, variants []VariantConfig) (MultiQualityResult, error) {
+	if ff == nil {
+		return MultiQualityResult{}, fmt.Errorf("ffmpeg is required")
+	}
+	if ytdlp == nil {
+		return MultiQualityResult{}, fmt.Errorf("ytdlp is required")
+	}
+	if youtubeURL == "" {
+		return MultiQualityResult{}, fmt.Errorf("youtube url is required")
+	}
+	if outputDir == "" {
+		return MultiQualityResult{}, fmt.Errorf("output dir is required")
+	}
+	if len(variants) == 0 {
+		variants = DefaultVariantConfigs()
+	}
+
+	res := MultiQualityResult{
+		OutputDir: outputDir,
+		Results:   map[QualityTier]HLSResult{},
+		Errors:    map[QualityTier]error{},
+	}
+
+	var mu sync.Mutex
+	var wg sync.WaitGroup
+
+	for _, v := range variants {
+		v := v
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			out := filepath.Join(outputDir, string(v.Tier))
+			logger.Debug().Str("tier", string(v.Tier)).Str("dir", out).Msg("yt-dlp + ffmpeg transcode starting")
+
+			// Use pipe:1 as input for FFmpeg, and pipe the video from yt-dlp
+			hlsRes, err := ff.TranscodeHLSFromYtDlpPipe(ctx, youtubeURL, ytdlp.Path, HLSRequest{
+				OutputDir:              out,
+				Width:                  v.Width,
+				Height:                 v.Height,
+				VideoBitrate:           v.VideoBitrate,
+				PlaylistName:           "index.m3u8",
+				DisableAudio:           false,
+				AudioBitrate:           "32k",
+				VideoPreset:            8,
+				VideoCRF:               35,
+				SegmentDurationSeconds: 4,
+			})
+
+			mu.Lock()
+			defer mu.Unlock()
+			if err != nil {
+				res.Errors[v.Tier] = err
+				res.Results[v.Tier] = hlsRes
+				logger.Error().Str("tier", string(v.Tier)).Err(err).Msg("yt-dlp + ffmpeg transcode failed")
+				return
+			}
+			res.Results[v.Tier] = hlsRes
+			logger.Debug().Str("tier", string(v.Tier)).Msg("yt-dlp + ffmpeg transcode completed")
+		}()
+	}
+
+	wg.Wait()
+
+	return res, nil
+}

@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>BlobTube</title>
+    <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
     <style>
       :root { color-scheme: light; }
       body {
@@ -48,19 +49,296 @@
       }
       button:disabled { opacity: 0.6; cursor: not-allowed; }
       .hint { font-size: 14px; opacity: 0.85; margin-top: 10px; }
+      .status {
+        margin-top: 10px;
+        padding: 8px 12px;
+        border-radius: 6px;
+        background: rgba(0,0,0,0.05);
+        font-size: 14px;
+      }
+      .status.error { background: rgba(220, 38, 38, 0.1); color: #991b1b; }
+      .status.success { background: rgba(34, 197, 94, 0.1); color: #166534; }
+      .video-container {
+        margin-top: 22px;
+        display: none;
+      }
+      .video-container.active {
+        display: block;
+      }
+      .video-js {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 1 / 1;
+      }
+      .quality-selector {
+        margin-top: 10px;
+        display: none;
+      }
+      .quality-selector.active {
+        display: block;
+      }
+      .quality-btn {
+        padding: 8px 12px;
+        margin-right: 8px;
+        border-radius: 6px;
+        border: 1px solid rgba(0,0,0,0.16);
+        background: white;
+        cursor: pointer;
+        font: inherit;
+        font-size: 14px;
+      }
+      .quality-btn.selected {
+        background: #0f172a;
+        color: white;
+      }
+      .quality-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
     </style>
   </head>
   <body>
     <main>
       <h1>BlobTube</h1>
-      <p>Low-bandwidth YouTube streaming proxy (WIP). Health endpoint: <code>/health</code>.</p>
+      <p>Low-bandwidth YouTube streaming proxy. Stream YouTube videos at ultra-low resolutions (64x64, 128x128, 256x256) optimized for slow connections.</p>
       <div class="card">
         <div class="row">
-          <input id="url" placeholder="Paste a YouTube URL (coming soon)" disabled />
-          <button disabled>Stream</button>
+          <input
+            id="url"
+            type="text"
+            placeholder="Paste YouTube URL here..."
+            aria-label="YouTube URL"
+          />
+          <button id="streamBtn">Stream</button>
         </div>
-        <div class="hint">Server is up when <code>/health</code> returns <code>{"status":"ok"}</code>.</div>
+        <div class="hint">
+          Enter a YouTube URL and click Stream. The video will be transcoded to low-bandwidth AV1 format.
+          Transcoding may take 30-60 seconds to start.
+        </div>
+        <div id="status" class="status" style="display: none;"></div>
+      </div>
+
+      <div id="videoContainer" class="video-container">
+        <video
+          id="player"
+          class="video-js vjs-default-skin vjs-big-play-centered"
+          controls
+          preload="auto"
+        >
+        </video>
+        <div id="qualitySelector" class="quality-selector">
+          <strong>Quality:</strong>
+          <button class="quality-btn" data-quality="auto">Auto (ABR)</button>
+          <button class="quality-btn" data-quality="64x64">64x64 (Lowest)</button>
+          <button class="quality-btn" data-quality="128x128">128x128 (Medium)</button>
+          <button class="quality-btn" data-quality="256x256">256x256 (Highest)</button>
+        </div>
       </div>
     </main>
+
+    <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+    <script>
+      const urlInput = document.getElementById('url');
+      const streamBtn = document.getElementById('streamBtn');
+      const statusDiv = document.getElementById('status');
+      const videoContainer = document.getElementById('videoContainer');
+      const qualitySelector = document.getElementById('qualitySelector');
+      let player = null;
+      let statusPollInterval = null;
+      let currentStreamId = null;
+      let currentQuality = 'auto';
+
+      streamBtn.addEventListener('click', async () => {
+        const url = urlInput.value.trim();
+        if (!url) {
+          showStatus('Please enter a YouTube URL', 'error');
+          return;
+        }
+
+        if (!url.includes('youtube.com') && !url.includes('youtu.be')) {
+          showStatus('Please enter a valid YouTube URL', 'error');
+          return;
+        }
+
+        streamBtn.disabled = true;
+        urlInput.disabled = true;
+        showStatus('Creating stream...', '');
+
+        try {
+          // Create stream
+          const response = await fetch('/api/stream/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url })
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `HTTP ${response.status}`);
+          }
+
+          const data = await response.json();
+          const streamId = data.stream_id;
+
+          showStatus(`Stream created: ${streamId}. Transcoding...`, '');
+
+          // Poll status
+          pollStreamStatus(streamId);
+        } catch (err) {
+          showStatus(`Error: ${err.message}`, 'error');
+          streamBtn.disabled = false;
+          urlInput.disabled = false;
+        }
+      });
+
+      async function pollStreamStatus(streamId) {
+        if (statusPollInterval) {
+          clearInterval(statusPollInterval);
+        }
+
+        let attempts = 0;
+        const maxAttempts = 180; // 3 minutes max
+
+        statusPollInterval = setInterval(async () => {
+          attempts++;
+
+          if (attempts > maxAttempts) {
+            clearInterval(statusPollInterval);
+            showStatus('Timeout waiting for stream to be ready', 'error');
+            streamBtn.disabled = false;
+            urlInput.disabled = false;
+            return;
+          }
+
+          try {
+            const response = await fetch(`/api/stream/${streamId}/status`);
+            if (!response.ok) {
+              throw new Error(`HTTP ${response.status}`);
+            }
+
+            const status = await response.json();
+
+            if (status.state === 'active' || status.state === 'completed') {
+              clearInterval(statusPollInterval);
+              showStatus('Stream ready! Loading player...', 'success');
+              loadPlayer(streamId);
+            } else if (status.state === 'error' || status.state === 'timed_out') {
+              clearInterval(statusPollInterval);
+              showStatus(`Stream failed: ${status.error || status.state}`, 'error');
+              streamBtn.disabled = false;
+              urlInput.disabled = false;
+            } else {
+              // Still initializing
+              showStatus(`Stream status: ${status.state}... (${attempts}s)`, '');
+            }
+          } catch (err) {
+            console.error('Status poll error:', err);
+          }
+        }, 1000);
+      }
+
+      function loadPlayer(streamId) {
+        currentStreamId = streamId;
+        const playlistUrl = getPlaylistUrl(streamId, currentQuality);
+
+        if (player) {
+          player.src({ src: playlistUrl, type: 'application/x-mpegURL' });
+        } else {
+          player = videojs('player', {
+            controls: true,
+            autoplay: false,
+            preload: 'auto',
+            fluid: false,
+            aspectRatio: '1:1',
+            html5: {
+              vhs: {
+                overrideNative: true
+              },
+              nativeVideoTracks: false,
+              nativeAudioTracks: false,
+              nativeTextTracks: false
+            }
+          });
+
+          player.src({ src: playlistUrl, type: 'application/x-mpegURL' });
+
+          player.on('error', function(e) {
+            console.error('Player error:', player.error());
+            showStatus(`Player error: ${player.error()?.message || 'Unknown error'}`, 'error');
+          });
+
+          player.on('loadedmetadata', function() {
+            showStatus('Video loaded successfully!', 'success');
+          });
+        }
+
+        videoContainer.classList.add('active');
+        qualitySelector.classList.add('active');
+        updateQualityButtons();
+        streamBtn.disabled = false;
+        urlInput.disabled = false;
+      }
+
+      function getPlaylistUrl(streamId, quality) {
+        if (quality === 'auto') {
+          return `/api/stream/${streamId}/master.m3u8`;
+        }
+        return `/api/stream/${streamId}/${quality}/index.m3u8`;
+      }
+
+      function switchQuality(quality) {
+        if (!currentStreamId || !player) return;
+
+        const currentTime = player.currentTime();
+        const wasPaused = player.paused();
+
+        currentQuality = quality;
+        const playlistUrl = getPlaylistUrl(currentStreamId, quality);
+
+        player.src({ src: playlistUrl, type: 'application/x-mpegURL' });
+
+        player.one('loadedmetadata', function() {
+          player.currentTime(currentTime);
+          if (!wasPaused) {
+            player.play();
+          }
+        });
+
+        updateQualityButtons();
+        showStatus(`Switched to ${quality === 'auto' ? 'Auto (ABR)' : quality}`, 'success');
+      }
+
+      function updateQualityButtons() {
+        document.querySelectorAll('.quality-btn').forEach(btn => {
+          const btnQuality = btn.getAttribute('data-quality');
+          if (btnQuality === currentQuality) {
+            btn.classList.add('selected');
+          } else {
+            btn.classList.remove('selected');
+          }
+        });
+      }
+
+      // Quality selector event listeners
+      document.querySelectorAll('.quality-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const quality = this.getAttribute('data-quality');
+          switchQuality(quality);
+        });
+      });
+
+      function showStatus(message, type) {
+        statusDiv.textContent = message;
+        statusDiv.className = 'status' + (type ? ` ${type}` : '');
+        statusDiv.style.display = 'block';
+      }
+
+      // Allow Enter key to submit
+      urlInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          streamBtn.click();
+        }
+      });
+    </script>
   </body>
 </html>

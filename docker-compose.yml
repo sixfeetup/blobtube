@@ -38,6 +38,7 @@ services:
       LOG_LEVEL: info
       DEV_MODE: "true"
       YTDLP_PATH: yt-dlp
+      STREAMS_DIR: /tmp/blobtube
     volumes:
       - certs:/certs:ro
 
