@@ -83,12 +83,12 @@ func (f *FFmpeg) TranscodeHLSFromYtDlpPipe(ctx context.Context, youtubeURL strin
 
 	preset := req.VideoPreset
 	if preset == 0 {
-		preset = 8
+		preset = 6 // "medium" preset for H.264
 	}
 
 	crf := req.VideoCRF
 	if crf == 0 {
-		crf = 35
+		crf = 28 // Higher CRF for smaller files, still good quality
 	}
 
 	playlistName := req.PlaylistName
@@ -121,6 +121,16 @@ func (f *FFmpeg) TranscodeHLSFromYtDlpPipe(ctx context.Context, youtubeURL strin
 		youtubeURL,
 	)
 
+	// Map preset number to H.264 preset string
+	presetMap := map[int]string{
+		1: "ultrafast", 2: "superfast", 3: "veryfast", 4: "faster",
+		5: "fast", 6: "medium", 7: "slow", 8: "slower", 9: "veryslow",
+	}
+	presetStr := presetMap[preset]
+	if presetStr == "" {
+		presetStr = "fast"
+	}
+
 	// FFmpeg command to read from stdin
 	ffmpegArgs := []string{
 		"-hide_banner",
@@ -128,9 +138,11 @@ func (f *FFmpeg) TranscodeHLSFromYtDlpPipe(ctx context.Context, youtubeURL strin
 		"-i", "pipe:0", // Read from stdin
 		"-t", strconv.Itoa(f.maxDurationSeconds()),
 		"-vf", fmt.Sprintf("scale=%d:%d:flags=lanczos", width, height),
-		"-c:v", "libsvtav1",
-		"-preset", strconv.Itoa(preset),
+		"-c:v", "libx264",
+		"-preset", presetStr,
 		"-crf", strconv.Itoa(crf),
+		"-profile:v", "baseline",
+		"-level", "3.0",
 		"-pix_fmt", "yuv420p",
 		"-sc_threshold", "0",
 		"-force_key_frames", fmt.Sprintf("expr:gte(t,n_forced*%d)", segmentDuration),
@@ -157,6 +169,7 @@ func (f *FFmpeg) TranscodeHLSFromYtDlpPipe(ctx context.Context, youtubeURL strin
 		"-hls_segment_type", "fmp4",
 		"-hls_fmp4_init_filename", "init.mp4",
 		"-hls_flags", "independent_segments",
+		"-movflags", "+frag_keyframe+empty_moov+default_base_moof",
 		"-hls_segment_filename", segmentPattern,
 	)
 
@@ -239,12 +252,12 @@ func (f *FFmpeg) TranscodeHLS(ctx context.Context, req HLSRequest) (HLSResult, e
 
 	preset := req.VideoPreset
 	if preset == 0 {
-		preset = 8
+		preset = 6 // "medium" preset for H.264
 	}
 
 	crf := req.VideoCRF
 	if crf == 0 {
-		crf = 35
+		crf = 28 // Higher CRF for smaller files, still good quality
 	}
 
 	playlistName := req.PlaylistName
@@ -268,6 +281,16 @@ func (f *FFmpeg) TranscodeHLS(ctx context.Context, req HLSRequest) (HLSResult, e
 	playlistPath := filepath.Join(outDir, playlistName)
 	segmentPattern := filepath.Join(outDir, "segment_%05d.m4s")
 
+	// Map preset number to H.264 preset string
+	presetMap := map[int]string{
+		1: "ultrafast", 2: "superfast", 3: "veryfast", 4: "faster",
+		5: "fast", 6: "medium", 7: "slow", 8: "slower", 9: "veryslow",
+	}
+	presetStr := presetMap[preset]
+	if presetStr == "" {
+		presetStr = "medium"
+	}
+
 	args := []string{
 		"-hide_banner",
 		"-y",
@@ -278,11 +301,15 @@ func (f *FFmpeg) TranscodeHLS(ctx context.Context, req HLSRequest) (HLSResult, e
 		"-vf",
 		fmt.Sprintf("scale=%d:%d:flags=lanczos", width, height),
 		"-c:v",
-		"libsvtav1",
+		"libx264",
 		"-preset",
-		strconv.Itoa(preset),
+		presetStr,
 		"-crf",
 		strconv.Itoa(crf),
+		"-profile:v",
+		"baseline",
+		"-level",
+		"3.0",
 		"-pix_fmt",
 		"yuv420p",
 		"-sc_threshold",
@@ -324,6 +351,8 @@ func (f *FFmpeg) TranscodeHLS(ctx context.Context, req HLSRequest) (HLSResult, e
 		"init.mp4",
 		"-hls_flags",
 		"independent_segments",
+		"-movflags",
+		"+frag_keyframe+empty_moov+default_base_moof",
 		"-hls_segment_filename",
 		segmentPattern,
 	)

@@ -28,8 +28,8 @@ RUN apt-get update \
   && curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp \
   && chmod a+rx /usr/local/bin/yt-dlp
 
-# Fail the build if SVT-AV1 isn't available.
-RUN ffmpeg -hide_banner -encoders | grep -qE 'libsvtav1|svt_av1'
+# Verify libx264 encoder is available
+RUN ffmpeg -hide_banner -encoders | grep -q libx264
 
 WORKDIR /app
 

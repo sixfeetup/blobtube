@@ -79,8 +79,8 @@ func TranscodeMultiQualityHLS(ctx context.Context, logger zerolog.Logger, ff *FF
 				PlaylistName:           "index.m3u8",
 				DisableAudio:           false,
 				AudioBitrate:           "32k",
-				VideoPreset:            8,
-				VideoCRF:               35,
+				VideoPreset:            5, // "fast" preset for H.264
+				VideoCRF:               28,
 				SegmentDurationSeconds: 4,
 			})
 
@@ -148,8 +148,8 @@ func TranscodeMultiQualityHLSFromYouTube(ctx context.Context, logger zerolog.Log
 				PlaylistName:           "index.m3u8",
 				DisableAudio:           false,
 				AudioBitrate:           "32k",
-				VideoPreset:            8,
-				VideoCRF:               35,
+				VideoPreset:            5, // "fast" preset for H.264
+				VideoCRF:               28,
 				SegmentDurationSeconds: 4,
 			})
 

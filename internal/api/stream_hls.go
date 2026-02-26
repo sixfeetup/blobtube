@@ -44,18 +44,19 @@ func serveMasterPlaylist(cfg config.Config, streams *stream.Manager) http.Handle
 			return
 		}
 
-		// Generate master playlist dynamically
+		// Generate master playlist dynamically with absolute URLs
+		baseURL := "/api/stream/" + id
 		master := `#EXTM3U
 #EXT-X-VERSION:6
 
-#EXT-X-STREAM-INF:BANDWIDTH=50000,RESOLUTION=64x64,CODECS="av01.0.00M.08"
-64x64/index.m3u8
+#EXT-X-STREAM-INF:BANDWIDTH=50000,RESOLUTION=64x64,CODECS="avc1.42E01E,mp4a.40.2"
+` + baseURL + `/64x64/index.m3u8
 
-#EXT-X-STREAM-INF:BANDWIDTH=100000,RESOLUTION=128x128,CODECS="av01.0.00M.08"
-128x128/index.m3u8
+#EXT-X-STREAM-INF:BANDWIDTH=100000,RESOLUTION=128x128,CODECS="avc1.42E01E,mp4a.40.2"
+` + baseURL + `/128x128/index.m3u8
 
-#EXT-X-STREAM-INF:BANDWIDTH=200000,RESOLUTION=256x256,CODECS="av01.0.00M.08"
-256x256/index.m3u8
+#EXT-X-STREAM-INF:BANDWIDTH=200000,RESOLUTION=256x256,CODECS="avc1.42E01E,mp4a.40.2"
+` + baseURL + `/256x256/index.m3u8
 `
 
 		touchOrRegister(streams, id)

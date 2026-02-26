@@ -137,6 +137,7 @@
     </main>
 
     <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/videojs-contrib-quality-levels@3.0.0/dist/videojs-contrib-quality-levels.min.js"></script>
     <script>
       const urlInput = document.getElementById('url');
       const streamBtn = document.getElementById('streamBtn');
@@ -218,10 +219,13 @@
 
             const status = await response.json();
 
-            if (status.state === 'active' || status.state === 'completed') {
+            if (status.state === 'completed') {
               clearInterval(statusPollInterval);
               showStatus('Stream ready! Loading player...', 'success');
               loadPlayer(streamId);
+            } else if (status.state === 'active') {
+              // Transcoding in progress
+              showStatus(`Transcoding in progress... (${attempts}s)`, '');
             } else if (status.state === 'error' || status.state === 'timed_out') {
               clearInterval(statusPollInterval);
               showStatus(`Stream failed: ${status.error || status.state}`, 'error');
@@ -239,10 +243,11 @@
 
       function loadPlayer(streamId) {
         currentStreamId = streamId;
-        const playlistUrl = getPlaylistUrl(streamId, currentQuality);
+        // Always load the master playlist for adaptive bitrate
+        const masterPlaylistUrl = `/api/stream/${streamId}/master.m3u8`;
 
         if (player) {
-          player.src({ src: playlistUrl, type: 'application/x-mpegURL' });
+          player.src({ src: masterPlaylistUrl, type: 'application/x-mpegURL' });
         } else {
           player = videojs('player', {
             controls: true,
@@ -260,7 +265,7 @@
             }
           });
 
-          player.src({ src: playlistUrl, type: 'application/x-mpegURL' });
+          player.src({ src: masterPlaylistUrl, type: 'application/x-mpegURL' });
 
           player.on('error', function(e) {
             console.error('Player error:', player.error());
@@ -269,6 +274,16 @@
 
           player.on('loadedmetadata', function() {
             showStatus('Video loaded successfully!', 'success');
+            console.log('Metadata loaded, quality levels:', player.qualityLevels().length);
+          });
+
+          // Listen for quality level changes
+          player.qualityLevels().on('addqualitylevel', function(event) {
+            console.log('Quality level added:', event.qualityLevel);
+          });
+
+          player.qualityLevels().on('change', function() {
+            console.log('Active quality level changed');
           });
         }
 
@@ -289,23 +304,64 @@
       function switchQuality(quality) {
         if (!currentStreamId || !player) return;
 
-        const currentTime = player.currentTime();
-        const wasPaused = player.paused();
-
         currentQuality = quality;
-        const playlistUrl = getPlaylistUrl(currentStreamId, quality);
+        const qualityLevels = player.qualityLevels();
 
-        player.src({ src: playlistUrl, type: 'application/x-mpegURL' });
-
-        player.one('loadedmetadata', function() {
-          player.currentTime(currentTime);
-          if (!wasPaused) {
-            player.play();
+        console.log('Available quality levels:', qualityLevels ? qualityLevels.length : 0);
+        if (qualityLevels) {
+          for (let i = 0; i < qualityLevels.length; i++) {
+            const level = qualityLevels[i];
+            console.log(`Level ${i}:`, {
+              width: level.width,
+              height: level.height,
+              bandwidth: level.bandwidth,
+              enabled: level.enabled
+            });
           }
-        });
+        }
+
+        if (quality === 'auto') {
+          // Enable adaptive bitrate
+          if (qualityLevels) {
+            for (let i = 0; i < qualityLevels.length; i++) {
+              qualityLevels[i].enabled = true;
+            }
+            console.log('Enabled all quality levels');
+          }
+          showStatus('Switched to Auto (ABR)', 'success');
+        } else {
+          // Lock to specific quality
+          if (qualityLevels && qualityLevels.length > 0) {
+            // Find the matching quality level by resolution
+            const targetWidth = parseInt(quality.split('x')[0]);
+            console.log('Looking for width:', targetWidth);
+
+            let found = false;
+            for (let i = 0; i < qualityLevels.length; i++) {
+              const level = qualityLevels[i];
+              if (level.width === targetWidth) {
+                // Disable all other quality levels
+                for (let j = 0; j < qualityLevels.length; j++) {
+                  qualityLevels[j].enabled = (j === i);
+                }
+                console.log(`Locked to level ${i} (${level.width}x${level.height})`);
+                showStatus(`Switched to ${quality}`, 'success');
+                found = true;
+                break;
+              }
+            }
+
+            if (!found) {
+              console.warn(`Could not find quality level with width ${targetWidth}`);
+              showStatus(`Quality ${quality} not available`, 'error');
+            }
+          } else {
+            console.warn('No quality levels available');
+            showStatus('Quality levels not ready', 'error');
+          }
+        }
 
         updateQualityButtons();
-        showStatus(`Switched to ${quality === 'auto' ? 'Auto (ABR)' : quality}`, 'success');
       }
 
       function updateQualityButtons() {
